@@ -1,6 +1,6 @@
 {
     "name": "uninstall",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Удаляет или инвентаризирует заданные приложения",
     "main": "uninstall.js",
     "author": "ViPiC",

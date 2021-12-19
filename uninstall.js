@@ -1,4 +1,4 @@
-/* 1.0.0 удаляет или инвентаризирует заданные приложения
+/* 1.0.1 удаляет или инвентаризирует заданные приложения
 
 cscript uninstall.min.js [\\<context>] [<output>] [<type>] [<scope>] [<option>...] <author> <name> <version> [<argument>...]
 
@@ -149,11 +149,11 @@ var uninstall = new App({
             // создаём служебные объекты
             if (config.context) {// если есть контекст выполнения
                 for (index = 1; index; index++) {
-                    try {// пробуем подключиться к компьютеру
+                    try {// пробуем подключиться к компьютеру используя флаг wbemConnectFlagUseMaxWait
                         switch (index) {// последовательно создаём объекты
-                            case 1: cim = locator.connectServer(config.context, "root\\CIMV2"); break;
+                            case 1: cim = locator.connectServer(config.context, "root\\CIMV2", null, null, null, null, 0x80); break;
                             case 2: runtime = cim.get("Win32_Process"); break;// среда для удалённого запуска процессов
-                            case 3: registry = locator.connectServer(config.context, "root\\default").get("stdRegProv"); break;
+                            case 3: registry = locator.connectServer(config.context, "root\\default", null, null, null, null, 0x80).get("stdRegProv"); break;
                             default: index = -1;// завершаем создание
                         };
                     } catch (e) {// при возникновении ошибки
