@@ -1,4 +1,4 @@
-/* 1.0.1 удаляет или инвентаризирует заданные приложения
+/* 1.0.2 удаляет или инвентаризирует заданные приложения
 
 cscript uninstall.min.js [\\<context>] [<output>] [<type>] [<scope>] [<option>...] <author> <name> <version> [<argument>...]
 
@@ -43,11 +43,12 @@ var uninstall = new App({
         fun: {// зависимые функции частного назначения
         },
         init: function () {// функция инициализации приложения
-            var pid, key, value, index, length, list, item, items, locator, cim, registry, runtime, command,
-                name, names, response, method, param, branch, application, filter, data, offset, delim, unit,
-                columns, isBreak, isMatch, isAddType, isVisible, branches = [], applications = [],
-                host = "", type = "", config = {}, timeout = 1000;
+            var pid, key, value, index, length, list, item, items, shell, locator, cim, registry, runtime,
+                command, name, names, response, method, param, branch, application, filter, data, offset,
+                delim, unit, columns, isBreak, isMatch, isAddType, isVisible, isLocalContext, branches = [],
+                applications = [], host = "", type = "", config = {}, timeout = 1000;
 
+            shell = new ActiveXObject("WScript.Shell");
             locator = new ActiveXObject("wbemScripting.Swbemlocator");
             locator.security_.impersonationLevel = 3;// Impersonate
             // получаем основные параметры
@@ -145,7 +146,8 @@ var uninstall = new App({
                 config[key].push(value);
             };
             // вносим поправки для конфигурации
-            if (!("context" in config)) config.context = ".";
+            isLocalContext = !("context" in config);
+            if (isLocalContext) config.context = ".";
             // создаём служебные объекты
             if (config.context) {// если есть контекст выполнения
                 for (index = 1; index; index++) {
@@ -360,13 +362,21 @@ var uninstall = new App({
                                 command += app.val.argDelim + value;
                             };
                         };
-                        // выполняем удалённый вызов команды
+                        // выполняем команду на удаление
                         if (!isBreak) {// если нужно продолжить обработку
-                            method = runtime.methods_.item("Create");
-                            param = method.inParameters.spawnInstance_();
-                            param.CommandLine = command;
-                            item = runtime.execMethod_(method.name, param);
-                            if (item.processId) {// если получен мдентификатор
+                            if (isLocalContext) {// если контекст локального компьютера
+                                try {// пробуем выполнить
+                                    item = shell.exec(command);
+                                } catch (e) {// при возникновении ошибки
+                                    item = null;
+                                };
+                            } else {// если контекст удалённого компьютера
+                                method = runtime.methods_.item("Create");
+                                param = method.inParameters.spawnInstance_();
+                                param.CommandLine = command;
+                                item = runtime.execMethod_(method.name, param);
+                            };
+                            if (item && item.processId) {// если получен идентификатор
                                 pid = item.processId;
                             } else isBreak = true;
                         };
